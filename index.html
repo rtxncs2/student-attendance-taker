@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Class 10A Attendance Tracker</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --primary: #2f6fed;
+      --primary-dark: #1f4ec8;
+      --success: #1ca96c;
+      --danger: #d9534f;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --border: #dfe3ea;
+      --shadow: 0 10px 25px rgba(20, 25, 40, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 32px auto;
+      padding: 20px;
+    }
+
+    .app {
+      background: var(--card);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .topbar {
+      background: linear-gradient(135deg, var(--primary), #4f8ef7);
+      color: white;
+      padding: 20px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .topbar h1 {
+      margin: 0;
+      font-size: clamp(1.5rem, 2vw, 2.2rem);
+    }
+
+    .class-badge {
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-weight: bold;
+      letter-spacing: 0.03em;
+    }
+
+    .tabs {
+      display: flex;
+      background: #eef3ff;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 16px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--muted);
+      transition: 0.2s ease;
+    }
+
+    .tab-btn.active {
+      background: white;
+      color: var(--primary);
+      border-bottom: 3px solid var(--primary);
+    }
+
+    .panel {
+      display: none;
+      padding: 24px;
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    label {
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    input[type="date"] {
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 1rem;
+      background: white;
+    }
+
+    .save-btn, .update-btn {
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s ease;
+      background: var(--primary);
+      color: white;
+      padding: 12px 18px;
+      font-size: 1rem;
+    }
+
+    .save-btn:hover, .update-btn:hover {
+      background: var(--primary-dark);
+    }
+
+    .student-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 14px;
+    }
+
+    .student-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #fafbff;
+      padding: 14px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .student-name {
+      font-weight: 700;
+      flex: 1;
+      overflow-wrap: anywhere;
+    }
+
+    .status-toggle {
+      display: flex;
+      gap: 8px;
+    }
+
+    .status-btn {
+      padding: 8px 12px;
+      font-size: 0.9rem;
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--text);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .status-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .status-btn.present {
+      background: rgba(28, 169, 108, 0.12);
+      border-color: rgba(28, 169, 108, 0.45);
+      color: var(--success);
+    }
+
+    .status-btn.present.active {
+      background: var(--success);
+      color: white;
+      border-color: var(--success);
+    }
+
+    .status-btn.absent {
+      background: rgba(217, 83, 79, 0.08);
+      border-color: rgba(217, 83, 79, 0.35);
+      color: var(--danger);
+    }
+
+    .status-btn.absent.active {
+      background: var(--danger);
+      color: white;
+      border-color: var(--danger);
+    }
+
+    .summary-box {
+      background: #f8faff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .summary-box strong {
+      font-size: 1rem;
+    }
+
+    .history-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .history-item {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      background: #fafbff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .history-item:hover {
+      border-color: #bfd1ff;
+      background: #f1f6ff;
+    }
+
+    .history-item .info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .history-item .date {
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .history-item .meta {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .empty-state {
+      color: var(--muted);
+      font-style: italic;
+      margin-top: 12px;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 12px;
+      }
+
+      .toolbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .student-card {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .status-toggle {
+        width: 100%;
+      }
+
+      .status-btn {
+        flex: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="app">
+      <div class="topbar">
+        <h1>Attendance Tracker</h1>
+        <div class="class-badge">Class 10A</div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="home">Home</button>
+        <button class="tab-btn" data-tab="history">History</button>
+      </div>
+
+      <div id="homePanel" class="panel active">
+        <div class="toolbar">
+          <div>
+            <label for="attendanceDate">Select Date:</label>
+            <input id="attendanceDate" type="date" />
+          </div>
+          <button id="saveAttendanceBtn" class="save-btn">Save Attendance</button>
+        </div>
+
+        <div id="summaryBox" class="summary-box">
+          <strong id="summaryText">0 Present / 0 Absent</strong>
+          <span id="saveStatus" style="color: var(--muted);">No changes saved yet</span>
+        </div>
+
+        <div id="studentList" class="student-list"></div>
+      </div>
+
+      <div id="historyPanel" class="panel">
+        <div class="toolbar">
+          <div>
+            <label for="historyDate">History for Date:</label>
+            <input id="historyDate" type="date" />
+          </div>
+          <button id="updateHistoryBtn" class="update-btn">Update Selected History</button>
+        </div>
+
+        <div id="historyList" class="history-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const CLASS_NAME = "10A";
+    const STORAGE_KEY = "class10A_attendance_data";
+    const STUDENTS = [
+      "Aarav Sharma",
+      "Ishita Verma",
+      "Rohit Singh",
+      "Meera Patel",
+      "Kabir Nair",
+      "Diya Sharma",
+      "Aditya Kumar",
+      "Sana Khan",
+      "Vihaan Gupta",
+      "Ananya Joshi"
+    ];
+
+    const state = {
+      currentDate: "",
+      selectedHistoryDate: "",
+      attendanceData: {},
+      currentStatuses: {},
+      editingHistoryMap: {}
+    };
+
+    function initializeStorage() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({}));
+      }
+      state.attendanceData = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    }
+
+    function getDefaultStatusMap() {
+      const map = {};
+      STUDENTS.forEach(student => {
+        map[student] = "absent";
+      });
+      return map;
+    }
+
+    function getStatusMapForDate(date) {
+      const map = getDefaultStatusMap();
+      const saved = state.attendanceData[date];
+      if (saved) {
+        Object.keys(saved).forEach(student => {
+          if (STUDENTS.includes(student)) {
+            map[student] = saved[student];
+          }
+        });
+      }
+      return map;
+    }
+
+    function saveAttendanceData() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.attendanceData));
+    }
+
+    function formatDate(dateString) {
+      const date = new Date(dateString + "T00:00:00");
+      return date.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+      });
+    }
+
+    function getSummaryText(statusMap) {
+      let present = 0;
+      let absent = 0;
+      Object.values(statusMap).forEach(val => {
+        if (val === "present") present++;
+        if (val === "absent") absent++;
+      });
+      return `${present} Present / ${absent} Absent`;
+    }
+
+    function renderHomeAttendance() {
+      const dateInput = document.getElementById("attendanceDate");
+      const summaryText = document.getElementById("summaryText");
+      const saveStatus = document.getElementById("saveStatus");
+      const listEl = document.getElementById("studentList");
+
+      if (!state.currentDate) {
+        state.currentDate = new Date().toISOString().split("T")[0];
+      }
+
+      dateInput.value = state.currentDate;
+      state.currentStatuses = getStatusMapForDate(state.currentDate);
+
+      summaryText.textContent = getSummaryText(state.currentStatuses);
+      saveStatus.textContent = "No changes saved yet";
+
+      listEl.innerHTML = "";
+
+      STUDENTS.forEach(student => {
+        const card = document.createElement("div");
+        card.className = "student-card";
+
+        const name = document.createElement("div");
+        name.className = "student-name";
+        name.textContent = student;
+
+        const toggle = document.createElement("div");
+        toggle.className = "status-toggle";
+
+        const presentBtn = document.createElement("button");
+        presentBtn.className = "status-btn present";
+        if (state.currentStatuses[student] === "present") {
+          presentBtn.classList.add("active");
+        }
+        presentBtn.textContent = "Present";
+        presentBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          state.currentStatuses[student] = "present";
+          renderHomeAttendance();
+        });
+
+        const absentBtn = document.createElement("button");
+        absentBtn.className = "status-btn absent";
+        if (state.currentStatuses[student] === "absent") {
+          absentBtn.classList.add("active");
+        }
+        absentBtn.textContent = "Absent";
+        absentBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          state.currentStatuses[student] = "absent";
+          renderHomeAttendance();
+        });
+
+        toggle.appendChild(presentBtn);
+        toggle.appendChild(absentBtn);
+
+        card.appendChild(name);
+        card.appendChild(toggle);
+        listEl.appendChild(card);
+      });
+    }
+
+    function saveCurrentAttendanceFromHome() {
+      const date = document.getElementById("attendanceDate").value;
+      if (!date) {
+        alert("Please pick a date first.");
+        return;
+      }
+
+      state.attendanceData[date] = { ...state.currentStatuses };
+
+      saveAttendanceData();
+      state.currentDate = date;
+      document.getElementById("saveStatus").textContent = `✓ Saved for ${formatDate(date)}`;
+      renderHistoryList();
+    }
+
+    function renderHistoryList() {
+      const historyList = document.getElementById("historyList");
+      const dates = Object.keys(state.attendanceData).sort((a, b) => new Date(b) - new Date(a));
+
+      historyList.innerHTML = "";
+
+      if (dates.length === 0) {
+        historyList.innerHTML = '<div class="empty-state">No attendance history available yet.</div>';
+        return;
+      }
+
+      dates.forEach(date => {
+        const summary = getSummaryText(getStatusMapForDate(date));
+        const item = document.createElement("div");
+        item.className = "history-item";
+        item.title = "Click to edit this date";
+
+        item.innerHTML = `
+          <div class="info">
+            <span class="date">${formatDate(date)}</span>
+            <span class="meta">${summary}</span>
+          </div>
+          <span style="color: var(--primary); font-weight: 700;">Edit</span>
+        `;
+
+        item.addEventListener("click", () => {
+          state.selectedHistoryDate = date;
+          document.getElementById("historyDate").value = date;
+
+          const selectedMap = getStatusMapForDate(date);
+          state.editingHistoryMap = { ...selectedMap };
+          renderHistoryEditor();
+        });
+
+        historyList.appendChild(item);
+      });
+    }
+
+    function renderHistoryEditor() {
+      const historyList = document.getElementById("historyList");
+
+      historyList.innerHTML = "";
+
+      const date = document.getElementById("historyDate").value;
+      if (!date) return;
+
+      const summaryText = getSummaryText(state.editingHistoryMap);
+
+      const summary = document.createElement("div");
+      summary.className = "summary-box";
+      summary.innerHTML = `<strong>${summaryText}</strong>`;
+      historyList.appendChild(summary);
+
+      const card = document.createElement("div");
+      card.className = "student-list";
+
+      STUDENTS.forEach(student => {
+        const studentCard = document.createElement("div");
+        studentCard.className = "student-card";
+
+        const name = document.createElement("div");
+        name.className = "student-name";
+        name.textContent = student;
+
+        const toggle = document.createElement("div");
+        toggle.className = "status-toggle";
+
+        const presentBtn = document.createElement("button");
+        presentBtn.className = "status-btn present";
+        if (state.editingHistoryMap[student] === "present") {
+          presentBtn.classList.add("active");
+        }
+        presentBtn.textContent = "Present";
+        presentBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          state.editingHistoryMap[student] = "present";
+          renderHistoryEditor();
+        });
+
+        const absentBtn = document.createElement("button");
+        absentBtn.className = "status-btn absent";
+        if (state.editingHistoryMap[student] === "absent") {
+          absentBtn.classList.add("active");
+        }
+        absentBtn.textContent = "Absent";
+        absentBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          state.editingHistoryMap[student] = "absent";
+          renderHistoryEditor();
+        });
+
+        toggle.appendChild(presentBtn);
+        toggle.appendChild(absentBtn);
+
+        studentCard.appendChild(name);
+        studentCard.appendChild(toggle);
+        card.appendChild(studentCard);
+      });
+
+      historyList.appendChild(card);
+    }
+
+    function updateSelectedHistory() {
+      const date = document.getElementById("historyDate").value;
+      if (!date) {
+        alert("Please select a date to update.");
+        return;
+      }
+
+      state.attendanceData[date] = { ...state.editingHistoryMap };
+      saveAttendanceData();
+      renderHistoryList();
+      alert(`Attendance updated for ${formatDate(date)}`);
+    }
+
+    function setupTabs() {
+      const tabButtons = document.querySelectorAll(".tab-btn");
+      const panels = document.querySelectorAll(".panel");
+
+      tabButtons.forEach(button => {
+        button.addEventListener("click", () => {
+          tabButtons.forEach(btn => btn.classList.remove("active"));
+          button.classList.add("active");
+
+          panels.forEach(panel => panel.classList.remove("active"));
+          if (button.dataset.tab === "home") {
+            document.getElementById("homePanel").classList.add("active");
+          } else {
+            document.getElementById("historyPanel").classList.add("active");
+          }
+        });
+      });
+    }
+
+    function setupEvents() {
+      document.getElementById("attendanceDate").addEventListener("change", (e) => {
+        state.currentDate = e.target.value;
+        renderHomeAttendance();
+      });
+
+      document.getElementById("saveAttendanceBtn").addEventListener("click", saveCurrentAttendanceFromHome);
+
+      document.getElementById("historyDate").addEventListener("change", (e) => {
+        const date = e.target.value;
+        if (!date) return;
+
+        state.selectedHistoryDate = date;
+        const statusMap = getStatusMapForDate(date);
+        state.editingHistoryMap = { ...statusMap };
+        renderHistoryEditor();
+      });
+
+      document.getElementById("updateHistoryBtn").addEventListener("click", updateSelectedHistory);
+    }
+
+    function init() {
+      initializeStorage();
+      setupTabs();
+      setupEvents();
+
+      const today = new Date().toISOString().split("T")[0];
+      state.currentDate = today;
+      state.selectedHistoryDate = today;
+
+      document.getElementById("attendanceDate").value = today;
+      document.getElementById("historyDate").value = today;
+
+      renderHomeAttendance();
+      renderHistoryList();
+      renderHistoryEditor();
+    }
+
+    init();
+  </script>
+</body>
+</html>
